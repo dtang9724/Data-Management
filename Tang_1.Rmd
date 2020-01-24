@@ -1,0 +1,152 @@
+---
+title: "Tang_1"
+author: "DijiaTang"
+date: "9/29/2019"
+output: html_document
+---
+
+
+```{r cars}
+
+library(tidyverse)
+
+vehicles <- read_csv("https://itao-datasets.s3.amazonaws.com/vehicles.csv",
+                     col_types="inincicccici")
+
+vehicles <- vehicles %>%
+  mutate(class=as.factor(class), drive=as.factor(drive), make=as.factor(make),
+         transmissiontype=as.factor(transmissiontype),cylinders=as.numeric(cylinders))
+
+glimpse(vehicles)
+
+library(ggplot2)
+
+# Problem 1 | Part A
+ggplot(vehicles)+
+  geom_point(mapping = aes(citympg,co2emissions))
+
+# Problem 1 | Part B
+ggplot(vehicles)+
+  geom_point(mapping = aes(citympg,co2emissions,color = drive))
+
+# Problem 1 | Part C
+ggplot(vehicles) + 
+  geom_bar(aes(year, fill = class))
+
+# Problem 1 | Part D
+ggplot(vehicles, aes(x=citympg))+
+  geom_histogram(color="black", fill="white", binwidth = 1)+
+  theme(panel.grid = element_blank(),
+        panel.background = element_blank())+
+  facet_grid(transmissiontype ~ .)
+
+# Problem 2 | Part A
+library(dplyr)
+vehicles %>%
+  select(class, citympg) %>%
+  group_by(class) %>%
+  summarise(min_citympg = min(citympg), 
+            max_citympg = max(citympg), 
+            mean_citympg = as.integer(mean(citympg)), 
+            median_citympg = as.integer(median(citympg))) 
+
+# Problem 2 | Part B
+vehicles %>%
+  select(year, citympg, highwaympg) %>%
+  group_by(year) %>%
+  summarise(mean_citympg = mean(citympg), 
+            mean_highwaympg = mean(highwaympg)) %>%
+  ggplot()+
+  geom_line(mapping = aes(x = year,y = mean_citympg), color = "red") +
+  geom_line(mapping = aes(x = year,y = mean_highwaympg), color = "blue") +
+  theme(legend.position="none") +
+  ylab('MPG')
+
+# Problem 2 | Part C
+vehicles %>%
+  select(year, citympg, highwaympg) %>%
+  group_by(year) %>%
+  summarise(mean_citympg = mean(citympg), 
+            mean_highwaympg = mean(highwaympg),
+            mean_overall = mean(citympg + highwaympg)) %>%
+  ggplot()+
+  geom_line(mapping = aes(x = year,y = mean_citympg), color = "red") +
+  geom_line(mapping = aes(x = year,y = mean_highwaympg), color = "blue") +
+  geom_line(mapping = aes(x = year,y = mean_overall), color = "green") +
+  theme(legend.position="none") +
+  ylab('MPG')
+
+# Problem 2 | Part D
+vehicles %>%
+  select(year, drive, citympg, highwaympg) %>%
+  group_by(year,drive) %>%
+  summarise(mean_citympg = mean(citympg), 
+            mean_highwaympg = mean(highwaympg),
+            mean_overall = (mean_citympg + mean_highwaympg)/2) %>%
+  ggplot()+
+  geom_line(mapping = aes(x = year,y = mean_citympg), color = "red") +
+  geom_line(mapping = aes(x = year,y = mean_highwaympg), color = "blue") +
+  geom_line(mapping = aes(x = year,y = mean_overall), color = "green") +
+  theme(legend.position="none") +
+  ylab('MPG') + 
+  facet_grid(drive ~ .)
+
+# Problem 3
+college <- read.csv("https://s3.amazonaws.com/itao-datasets/college.csv")
+
+college <- college %>%
+  mutate(state=as.factor(state), region=as.factor(region),
+         highest_degree=as.factor(highest_degree), control=as.factor(control),
+         gender=as.factor(gender), loan_default_rate=as.numeric(loan_default_rate))
+
+# Visualization 1
+library(usmap)
+
+satbystate <- college %>%
+  select(state,sat_avg) %>%
+  group_by(state) %>%
+  summarise(stateavgsat = mean(sat_avg)) 
+
+plot_usmap(data = satbystate, values = 'stateavgsat', color = "black", exclude = c('AK', 'HI')) + 
+  scale_fill_continuous(low = 'red', high = 'green',name = "SAT By State", label = scales::comma) + 
+  theme(legend.position = "right") +
+  labs(title = "SAT Scores By State",
+       subtitle = "Source: US Department of Education")
+
+# Discussion (viz 1): 
+# This graph shows the average SAT score of each state, excluding Alaska and Hawaii. 
+# The color of the states ranges from red to green. 
+# Green means the state has a higher average SAT score. On the contrary, red means the state has a lower average SAT score.
+# The greener the state, the higher the average SAT; the redder the state, the lower the average SAT.
+# The purpose of this graph is to allow the user to see the general education quality across the US continent from the standpoint of SAT.
+
+# Visualization 2
+lineardataset <- vehicles %>%
+  select(cylinders, citympg, highwaympg) %>%
+  group_by(cylinders) %>%
+  summarise(mean_overall_cy = mean(citympg + highwaympg)/2) 
+
+head(lineardataset)
+
+ggplot(lineardataset)+
+  geom_point(mapping = aes(x = cylinders,y = mean_overall_cy), color = "blue") +
+  geom_smooth(method = 'lm',mapping = aes(x = cylinders,y = mean_overall_cy), color = "red",se=F) +
+  ylab('OverallMPG') +
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank()) +
+  theme(legend.position = "none")
+
+
+linear = lm(lineardataset$cylinders~lineardataset$mean_overall_cy,lineardataset)
+summary(linear)
+
+# Discussion (viz 2):
+# This graph shows a linear correlation relationship between the number of cylinders and the overall MPG.
+# The purpose of this graph is to determine whether more cylinders will lead to less overall MPG, in other words, more full consumption.
+# After fitting a line into the scatterplot, I performed a linear regression summary.
+# According to the summary, even though the line shows there is a negative correlation between cylinders and overall MPG, under the 5% confidence level, this relationship is not statistically significant, as the p-value 0.011678 is larger than 0.05.
+# This is primarily because the overall fuel consumption of an 1-cylinder car actually is similar to that of a 5-cylinder car.
+# In other words, the 1-cylinder car consumes more fuel that we think it does.
+
+```
+
