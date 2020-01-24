@@ -1,1 +1,1 @@
-### Data-Management assignments using R
+### Data-Management assignments using R and SQL exercises
