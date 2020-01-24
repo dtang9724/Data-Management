@@ -1,1 +1,1 @@
-### Data-Management assignments using R and SQL exercises
+### Data-Management assignments using R/Python and SQL exercises
