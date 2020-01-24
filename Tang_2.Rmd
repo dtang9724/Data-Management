@@ -1,0 +1,120 @@
+---
+title: "Tang_2"
+author: "Dijia Tang"
+date: "10/7/2019"
+output: html_document
+---
+
+
+```{r cars}
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(splitstackshape)
+
+censusraw <- read_csv('https://itao-datasets.s3.amazonaws.com/aff_2012.csv',skip = 1)
+
+census <- censusraw
+
+head(census)
+
+censusworking <- census %>%
+  select(3, 5, 7, 'Number of paid employees for pay period including March 12', 'Annual payroll ($1,000)')
+
+head(censusworking)
+
+colnames(censusworking) <- c('geo', 'sector', 'ownership', 'totalemp', 'totalpay')
+
+head(censusworking)
+
+geosplit <- cSplit(censusworking, "geo", ", ")
+
+names(geosplit)[5:6]<- c('county', 'state')
+
+head(geosplit)
+
+geosplit <- geosplit[!is.na(as.numeric(geosplit$totalpay)),]
+
+geosplit <- geosplit %>%
+  mutate(sector=as.factor(sector), ownership=as.factor(ownership),
+         totalemp=as.numeric(totalemp), totalpay=as.numeric(totalpay),
+         county=as.factor(county), state=as.factor(state))
+
+str(geosplit$totalemp)
+
+equaldat <- geosplit %>%
+  filter(ownership == 'Equally male-/female-owned', totalemp!=0) %>%
+  select(totalpay, totalemp) 
+
+equal <- round(equaldat$totalpay/equaldat$totalemp,0)
+  
+femaledat <- geosplit %>%
+  filter(ownership == 'Female-owned', totalemp!=0) %>%
+  select(totalpay, totalemp) 
+
+female <- round(femaledat$totalpay/femaledat$totalemp,0)
+
+maledat <- geosplit %>%
+  filter(ownership == 'Male-owned', totalemp!=0) %>%
+  select(totalpay, totalemp) 
+
+male <- round(maledat$totalpay/maledat$totalemp,0)
+
+eqcomp <- geosplit %>%
+  filter(ownership == 'Equally male-/female-owned', totalemp!=0)
+fcomp <- geosplit %>%
+  filter(ownership == 'Female-owned', totalemp!=0)
+mcomp <- geosplit %>%
+  filter(ownership == 'Male-owned', totalemp!=0)
+
+eqbind <- cbind(eqcomp, equal)
+fbind <- cbind(fcomp, female)
+mbind <- cbind(mcomp, male)
+
+eqbind <- subset(eqbind, select = -c(totalemp, totalpay))
+fbind <- subset(fbind, select = -c(totalemp, totalpay))
+mbind <- subset(mbind, select = -c(totalemp, totalpay))
+
+eqbind <- eqbind[c("county", "state", "sector", 'ownership', 'equal')]
+fbind <- fbind[c("county", "state", "sector", 'ownership', 'female')]
+mbind <- mbind[c("county", "state", "sector", 'ownership', 'male')]
+
+eqgather <- eqbind %>%
+  gather(saltype, equal, -ownership, -sector, -state, -county)
+fgather <- fbind %>%
+  gather(saltype, female, -ownership, -sector, -state, -county)
+mgather <- mbind %>%
+  gather(saltype, male, -ownership, -sector, -state, -county)
+
+names(eqgather)[6]<- c('avgsal')
+names(fgather)[6]<- c('avgsal')
+names(mgather)[6]<- c('avgsal')
+head(eqgather)
+head(fgather)
+head(mgather)
+
+bindall <- rbind(eqgather, fgather, mgather)
+
+bindall <- subset(bindall, select = -c(ownership))
+
+head(bindall)
+
+fin <- spread(bindall, saltype, avgsal)
+
+head(fin)
+
+finalcsv <- subset(fin, !is.na(equal) | !is.na(female) | !is.na(male))
+
+finalcsv <- finalcsv %>%
+  filter(sector != 'Total for all sectors')
+  arrange(state,county,sector)
+
+head(finalcsv)
+summary(finalcsv)
+dim(finalcsv)
+
+write.csv(finalcsv, file = "Tang_2.csv", row.names = FALSE, na = '')
+
+
+```
+
