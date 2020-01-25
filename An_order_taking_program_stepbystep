@@ -1,0 +1,783 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "D4RQ-cWh49-C",
+    "nbgrader": {
+     "grade": false,
+     "locked": true,
+     "solution": false
+    }
+   },
+   "source": [
+    "Writing an order-taking program"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "ACk1_Ic249-J"
+   },
+   "source": [
+    "<div class=\"alert alert-block alert-danger\">\n",
+    "<strong>Patience Required</strong><br>\n",
+    "Depending on the speed of your internet connection, some cells may take a while to execute. Don't restart the notebook unless a single cell has taken more than 10 seconds to finsh.\n",
+    "<p>Also, you may inadvertently write a loop that never ends during this exercise. Remember that you can always use the `Kernel -> Interrupt Kernal` option via the menu at the top of the screen to kill your cell if this happens.\n",
+    "</p>\n",
+    "<p>If you get the star of death, attempt to interrupt the notebook first.  If that doesn't solve the problem, restart the kernel.</p>\n",
+    "</div> \n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "_ob2EUx-49-O"
+   },
+   "source": [
+    "This assignment is meant to be a comprehensive review of all that we have covered in module 1. If you are struggling with some of the tasks, go back and review the tutorial notebooks."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "KitMxZM949-Q",
+    "nbgrader": {
+     "grade": false,
+     "locked": true,
+     "solution": false
+    }
+   },
+   "source": [
+    "## Problem Description\n",
+    "In this assignment you are going to be creating an automated ordering system for your favorite restaurant. Essentially, it will have to be able to take new orders as well as display existing orders. Since this is going to be a fairly complex application in comparison to what you've done before, I will provide some general guidance in terms of what to do when."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "SSUWi70iGDf9"
+   },
+   "source": [
+    "### Important Note\n",
+    "Given the nature of this assignment, it will be difficult to skip around between questions. Each question builds on the previous one so it is important to get each question correct."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "ZKp-Mcoq49-S"
+   },
+   "source": [
+    "## Step 1: Welcome your Customers (1 point)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "collapsed": true,
+    "id": "6gi-3ZBW49-U"
+   },
+   "outputs": [],
+   "source": [
+    "# PROBLEM 1\n",
+    "# - Print out a welcome message to your customers.\n",
+    "# - If you want to include line breaks in your text\n",
+    "#   use \\n in the code for each line break\n",
+    "# - Alternatively, you use multiple print statements\n",
+    "print('Welcome to us!\\nHow can we help you today?')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "t5QxLaUU49-o"
+   },
+   "source": [
+    "## Step 2: Decide which Data Type/Class to Use (4 points)\n",
+    "You are going to need to decide what type of object you will use to keep track of customer orders. We've covered two data types that could work: `list` and `dict`. \n",
+    "* How do you want to identify an order? By an index value or by a key name? That should determine which data type to use.\n",
+    "* Assign the empty `list` or `dict` you create to the name `orders`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "collapsed": true,
+    "id": "C7OJyaFB49-r"
+   },
+   "outputs": [],
+   "source": [
+    "# PROBLEM 1\n",
+    "# - Define your empty container object (list or dict) \n",
+    "#   here to hold your customer orders.\n",
+    "orders = []"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "bnzKu_kL49-4"
+   },
+   "source": [
+    "## Step 3: customer_directive() Function (15 points)\n",
+    "In this step you will write a function that asks the user if they want to place a new order or lookup an existing order. Once they respond, the function must evaluate their input and return one of the following strings: \n",
+    "* 'new order'\n",
+    "* 'display orders'\n",
+    "* 'invalid input'\n",
+    "* 'quit program'\n",
+    "\n",
+    "If you pass a string to the `input()` function, it will present that string as instructions for the user. \n",
+    "\n",
+    "You'll need to tell them what are the valid inputs. The user will need to be informed as to what input will (1) start a new order, (2) present existing orders, or (3) quit the program. Anything other than these specificed inputs should results in \"invalid input\" being returned from the function.\n",
+    "\n",
+    "**Hint**: Just like with `print()` you can put `\\n` in the string you pass to `input()` to\n",
+    "put line breaks in the instructions."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "id": "Q4PeZdTw49-7"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "2\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "'display orders'"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# PROBLEM 1\n",
+    "# Write your `customer_directive()` function here\n",
+    "def customer_directive():\n",
+    "    user_input = str(input('What would you like to do?\\n1. Start a new order\\n2. Present existing orders\\n3. Quit the program\\n'))\n",
+    "    if user_input == '1':\n",
+    "        return 'new order'\n",
+    "    elif user_input == '2':\n",
+    "        return 'display orders'\n",
+    "    elif user_input == '3':\n",
+    "        return 'quit program'\n",
+    "    else:\n",
+    "        return 'invalid input'\n",
+    "\n",
+    "customer_directive()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "unNGuwBV49_J"
+   },
+   "source": [
+    "### Step 4: Stop to Organize a Bit (5 Points)\n",
+    "So, before things get any more complicated let's talk about how you should organize your program.\n",
+    "* All function definitions should go at the top so that you can easily see all of them.\n",
+    "* Then your empty data structure creation \n",
+    "* Then your welcome message\n",
+    "* Then what we are about to do.\n",
+    "\n",
+    "Just to help you keep things straight for the rest of this assignment, I'd like you to put all your code in each answer cell. That way, you'll be able to view it all at once in each step and it will be more understandable when I tell you to put something in a specific location.\n",
+    "\n",
+    "So, in the next cell, arrange your code as I've specified above. Then for each subsequent problem, copy the code from the previous cell and continue your work."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "id": "WEN4VkzJ49_O"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Welcome to us!\n",
+      "How can we help you today?\n"
+     ]
+    }
+   ],
+   "source": [
+    "\n",
+    "# PROBLEM 1\n",
+    "# All Function Definitions go here\n",
+    "def customer_directive():\n",
+    "    user_input = str(input('What would you like to do?\\n1. Start a new order\\n2. Present existing orders\\n3. Quit the program\\n'))\n",
+    "    if user_input == '1':\n",
+    "        return 'new order'\n",
+    "    elif user_input == '2':\n",
+    "        return 'display orders'\n",
+    "    elif user_input == '3':\n",
+    "        return 'quit program'\n",
+    "    else:\n",
+    "        return 'invalid input'\n",
+    "\n",
+    "    \n",
+    "# Create your empty data structure to hold your orders\n",
+    "orders = []\n",
+    "\n",
+    "# Display your welcome message\n",
+    "print('Welcome to us!\\nHow can we help you today?')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "wmafSgKN49_f"
+   },
+   "source": [
+    "## Step 5: Execute `customer_directive` in a Conditional Loop (15 points)\n",
+    "So, after you display your welcome message, you need to start a loop that will continually run until the customer decides to end the program.  \n",
+    "\n",
+    "**IMPORTANT! ** We will refer to this loop as the **\"main program loop\"** in future instructions.\n",
+    "\n",
+    "* Create a loop that executes `customer_directive()` and captures it's return value.\n",
+    "* Evaluate the return value and take the following actions:\n",
+    "    * if it is \"new order\": `pass`\n",
+    "    * if it is \"display orders\": `pass`\n",
+    "    * if it is \"invalid input\": tell the customer their input was invalid and continue to the next loop iteration\n",
+    "    * if it is \"quit program\": Say goodbye to the customer and break the loop.\n",
+    "    \n",
+    "* HINT: This isn't necessary, but you might want to put line breaks at the start and end of your messages so that there is some whitespace between them for the user. Just a little UI advice."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "YwkSYfo-49_h"
+   },
+   "source": [
+    "### Be Mindful!\n",
+    "Once you start a loop around your call to `customer_directive` you will have to make sure that the `input()` is not waiting for a response before you move on or reexecute the cell. If you don't you will get the * of death.\n",
+    "\n",
+    "If you get the star of death, attempt to interrupt the notebook first.  If that doesn't solve the problem, restart the kernel. **DON'T RELOAD THE PAGE UNLESS YOU HAVE SAVED!!!**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "id": "3ZdOV4Pj49_k"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Welcome to us!\n",
+      "How can we help you today?\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "4\n",
+      "Invalid input. Please try again.\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "2\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "3\n",
+      "Goodbye!\n"
+     ]
+    }
+   ],
+   "source": [
+    "# PROBLEM 1\n",
+    "# Copy your old code here and add the new parts\n",
+    "def customer_directive():\n",
+    "    user_input = str(input('What would you like to do?\\n1. Start a new order\\n2. Present existing orders\\n3. Quit the program\\n'))\n",
+    "    if user_input == '1':\n",
+    "        return 'new order'\n",
+    "    elif user_input == '2':\n",
+    "        return 'display orders'\n",
+    "    elif user_input == '3':\n",
+    "        return 'quit program'\n",
+    "    else:\n",
+    "        return 'invalid input'\n",
+    "    \n",
+    "# Create your empty data structure to hold your orders\n",
+    "orders = []\n",
+    "\n",
+    "# Display your welcome message\n",
+    "print('Welcome to us!\\nHow can we help you today?')\n",
+    "\n",
+    "while 1!=0:\n",
+    "    user_command = customer_directive()\n",
+    "    if user_command == 'new order':\n",
+    "        pass\n",
+    "    elif user_command == 'display orders':\n",
+    "        pass\n",
+    "    elif user_command == 'invalid input':\n",
+    "        print('Invalid input. Please try again.')\n",
+    "        continue\n",
+    "    else:\n",
+    "        print('Goodbye!')\n",
+    "        break\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "ZMIHHqBG49_y"
+   },
+   "source": [
+    "## Step 6: Start work on `take_order()` function (5 points)\n",
+    "In this step, you are going to define a new function `take_order()` which you will call when the customer decides to place a new order.\n",
+    "\n",
+    "Steps:\n",
+    "* Define a new function called `take_order()` and put it's definition just after the first function you defined.\n",
+    "* It should take a single argument, which will your `orders` object (which is currently empty). Remember that this will be either a `list` or a `dict`, depending on your earlier choice.\n",
+    "* Inside the function, take the following steps:\n",
+    "    * Define an empty `dict`, called `order` which will represent the items in the new order.\n",
+    "    * In the next step, we will add more to this function, but for now that is all you need to do.\n",
+    "* In the *main program loop*, replace your `pass` statement with a call to `take_order()` when the `customer_directive()` has returned \"new order\"\n",
+    "  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "id": "rwMbah9o49_z"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Welcome to us!\n",
+      "How can we help you today?\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "1\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "2\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "\n",
+      "Invalid input. Please try again.\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "1\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "3\n",
+      "Goodbye!\n"
+     ]
+    }
+   ],
+   "source": [
+    "# PROBLEM 1\n",
+    "# Copy your old code here and add the new parts\n",
+    "def customer_directive():\n",
+    "    user_input = str(input('What would you like to do?\\n1. Start a new order\\n2. Present existing orders\\n3. Quit the program\\n'))\n",
+    "    if user_input == '1':\n",
+    "        return 'new order'\n",
+    "    elif user_input == '2':\n",
+    "        return 'display orders'\n",
+    "    elif user_input == '3':\n",
+    "        return 'quit program'\n",
+    "    else:\n",
+    "        return 'invalid input'\n",
+    "    \n",
+    "def take_order(orders):\n",
+    "    order = {}\n",
+    "    orders.append(order)\n",
+    "  \n",
+    "# Create your empty data structure to hold your orders\n",
+    "orders = []\n",
+    "\n",
+    "# Display your welcome message\n",
+    "print('Welcome to us!\\nHow can we help you today?')\n",
+    "\n",
+    "while 1!=0:\n",
+    "    user_command = customer_directive()\n",
+    "    if user_command == 'new order':\n",
+    "        take_order(orders)\n",
+    "    elif user_command == 'display orders':\n",
+    "        pass\n",
+    "    elif user_command == 'invalid input':\n",
+    "        print('Invalid input. Please try again.')\n",
+    "        continue\n",
+    "    else:\n",
+    "        print('Goodbye!')\n",
+    "        break"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "xYucq9Kr4-AJ",
+    "nbgrader": {
+     "grade": false,
+     "locked": true,
+     "solution": false
+    }
+   },
+   "source": [
+    "## Step 7: Taking Orders (35 Points)\n",
+    "**Ok, this is the most complex step by far. It will take some time along with trial and error.**\n",
+    "\n",
+    "In this step, you are going to add code to your `take_order()` function:\n",
+    "* To keep things simple, we are going to offer a very limited menu of 3-5 items. \n",
+    "    * Think of what you want these items to be. If you were doing a program for McDonalds, you might offer burgers, drinks, and fries for example.\n",
+    "        \n",
+    "* For each menu item, ask the customer how many of them they would like.\n",
+    "* Attempt to convert their `input` response to an integer with the `int()` function and assign the *value* to the `order` dict with the item name as the *key*. \n",
+    "* That will generate an exception for all `input()` strings that can't be converted to an integer (remember that all input() values are initially strings).\n",
+    "    * Handle exceptions by telling the user that their input was invalid and that you've marked them down for a large number of orders as a result.\n",
+    "        * Assign that large *value* to the `order` dict with the item name as the *key*. \n",
+    "        \n",
+    "After you've gotten all the order information, you will need to add the `order` object to your `orders` object (list or dictionary):\n",
+    "* If you are using a `dict` for your `orders` object, you need to get a key name for the order as a whole. Obtain this from the user and then assign the new `order` object as the *value* for the *key* name that you just obtained from the user. Remember that there are multiple ways of adding new keys to an existing dictionary object.\n",
+    "* If you are using a list object for `orders` you will not need a name for the new order, just add it to the list.\n",
+    "\n",
+    "HINT: If you want to see if your function is correctly adding new `order` objects to `orders`, you can `print(orders)` as the last step in the **main program loop**."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "id": "9eUxRa1U4-AL"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Welcome to us!\n",
+      "How can we help you today?\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "1\n",
+      "Enter drink order quantity: 3\n",
+      "Enter burger order quantity: 4\n",
+      "Enter fries order quantity: 5\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "1\n",
+      "Enter drink order quantity: 34\n",
+      "Enter burger order quantity: f\n",
+      "Invalid input. Your order quantity has been maximized\n",
+      "Enter fries order quantity: w\n",
+      "Invalid input. Your order quantity has been maximized\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "3\n",
+      "Goodbye!\n"
+     ]
+    }
+   ],
+   "source": [
+    "# PROBLEM 1\n",
+    "# Copy your old code here and add the new parts\n",
+    "# PROBLEM 1\n",
+    "# Copy your old code here and add the new parts\n",
+    "def customer_directive():\n",
+    "    user_input = str(input('What would you like to do?\\n1. Start a new order\\n2. Present existing orders\\n3. Quit the program\\n'))\n",
+    "    if user_input == '1':\n",
+    "        return 'new order'\n",
+    "    elif user_input == '2':\n",
+    "        return 'display orders'\n",
+    "    elif user_input == '3':\n",
+    "        return 'quit program'\n",
+    "    else:\n",
+    "        return 'invalid input'\n",
+    "    \n",
+    "def take_order(orders):\n",
+    "    order = {}\n",
+    "    try:\n",
+    "        drink_qty = int(input('Enter drink order quantity: '))\n",
+    "        order_drink = {'drink': drink_qty}\n",
+    "        order.update(order_drink)\n",
+    "    except:\n",
+    "        order.update({'drink': 999})\n",
+    "        print('Invalid input. Your order quantity has been maximized')\n",
+    "    try:\n",
+    "        burger_qty = int(input('Enter burger order quantity: '))\n",
+    "        order_burger = {'burger': burger_qty}\n",
+    "        order.update(order_burger)\n",
+    "    except:\n",
+    "        order.update({'burger': 999})\n",
+    "        print('Invalid input. Your order quantity has been maximized')\n",
+    "    try:\n",
+    "        fries_qty = int(input('Enter fries order quantity: '))\n",
+    "        order_fries = {'fries': fries_qty}\n",
+    "        order.update(order_fries)\n",
+    "    except:\n",
+    "        order.update({'fries': 999})\n",
+    "        print('Invalid input. Your order quantity has been maximized')\n",
+    "        \n",
+    "    orders.append(order)\n",
+    "  \n",
+    "# Create your empty data structure to hold your orders\n",
+    "orders = []\n",
+    "\n",
+    "# Display your welcome message\n",
+    "print('Welcome to us!\\nHow can we help you today?')\n",
+    "\n",
+    "while 1!=0:\n",
+    "    user_command = customer_directive()\n",
+    "    if user_command == 'new order':\n",
+    "        take_order(orders)\n",
+    "    elif user_command == 'display orders':\n",
+    "        pass\n",
+    "    elif user_command == 'invalid input':\n",
+    "        print('Invalid input. Please try again.')\n",
+    "        continue\n",
+    "    else:\n",
+    "        print('Goodbye!')\n",
+    "        break\n",
+    "\n",
+    "\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "MAmqjJxY4-Ai"
+   },
+   "source": [
+    "### Step 8: Displaying Orders (20 Points)\n",
+    "There is only one thing left to add to our program.  The ability to display existing orders.\n",
+    "\n",
+    "* Create a new function called `display_orders()` that takes the `orders` object as an argument - just like `take_order()`.\n",
+    "* You will call this function inside of the **main program loop** when the return value from `customer_directive()` is \"display orders\".\n",
+    "* Inside of the function, iterate (loop) over each order and print it out.\n",
+    "* HINT: If you are using a dictionary for `orders` and attempt to iterate over it directly, you'll only get the key values. Try iterating over `orders.values()` and `order.items()` to see what you can come up with. You should be able to display both the order items and the order names.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "colab": {},
+    "colab_type": "code",
+    "id": "3Dl2McsI4-Ak"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Welcome to us!\n",
+      "How can we help you today?\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "1\n",
+      "Enter drink order quantity: 2\n",
+      "Enter burger order quantity: 3\n",
+      "Enter fries order quantity: 4\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "2\n",
+      "{'drink': 2, 'burger': 3, 'fries': 4}\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "1\n",
+      "Enter drink order quantity: 3\n",
+      "Enter burger order quantity: 4\n",
+      "Enter fries order quantity: j\n",
+      "Invalid input. Your order quantity has been maximized\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "2\n",
+      "{'drink': 2, 'burger': 3, 'fries': 4}\n",
+      "{'drink': 3, 'burger': 4, 'fries': 999}\n",
+      "What would you like to do?\n",
+      "1. Start a new order\n",
+      "2. Present existing orders\n",
+      "3. Quit the program\n",
+      "3\n",
+      "Goodbye!\n"
+     ]
+    }
+   ],
+   "source": [
+    "# PROBLEM 1\n",
+    "# Copy your old code here and add the new parts\n",
+    "\n",
+    "# PROBLEM 1\n",
+    "# Copy your old code here and add the new parts\n",
+    "# PROBLEM 1\n",
+    "# Copy your old code here and add the new parts\n",
+    "def customer_directive():\n",
+    "    user_input = str(input('What would you like to do?\\n1. Start a new order\\n2. Present existing orders\\n3. Quit the program\\n'))\n",
+    "    if user_input == '1':\n",
+    "        return 'new order'\n",
+    "    elif user_input == '2':\n",
+    "        return 'display orders'\n",
+    "    elif user_input == '3':\n",
+    "        return 'quit program'\n",
+    "    else:\n",
+    "        return 'invalid input'\n",
+    "    \n",
+    "def take_order(orders):\n",
+    "    order = {}\n",
+    "    try:\n",
+    "        drink_qty = int(input('Enter drink order quantity: '))\n",
+    "        order_drink = {'drink': drink_qty}\n",
+    "        order.update(order_drink)\n",
+    "    except:\n",
+    "        order.update({'drink': 999})\n",
+    "        print('Invalid input. Your order quantity has been maximized')\n",
+    "    try:\n",
+    "        burger_qty = int(input('Enter burger order quantity: '))\n",
+    "        order_burger = {'burger': burger_qty}\n",
+    "        order.update(order_burger)\n",
+    "    except:\n",
+    "        order.update({'burger': 999})\n",
+    "        print('Invalid input. Your order quantity has been maximized')\n",
+    "    try:\n",
+    "        fries_qty = int(input('Enter fries order quantity: '))\n",
+    "        order_fries = {'fries': fries_qty}\n",
+    "        order.update(order_fries)\n",
+    "    except:\n",
+    "        order.update({'fries': 999})\n",
+    "        print('Invalid input. Your order quantity has been maximized')\n",
+    "        \n",
+    "    orders.append(order)\n",
+    "\n",
+    "def display_orders(orders):\n",
+    "    for order in orders:\n",
+    "        print(order)\n",
+    "    \n",
+    "# Create your empty data structure to hold your orders\n",
+    "orders = []\n",
+    "\n",
+    "# Display your welcome message\n",
+    "print('Welcome to us!\\nHow can we help you today?')\n",
+    "\n",
+    "while 1!=0:\n",
+    "    user_command = customer_directive()\n",
+    "    if user_command == 'new order':\n",
+    "        take_order(orders)\n",
+    "    elif user_command == 'display orders':\n",
+    "        display_orders(orders)\n",
+    "    elif user_command == 'invalid input':\n",
+    "        print('Invalid input. Please try again.')\n",
+    "        continue\n",
+    "    else:\n",
+    "        print('Goodbye!')\n",
+    "        break\n",
+    "\n",
+    "\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "collapsed": true
+   },
+   "source": []
+  }
+ ],
+ "metadata": {
+  "colab": {
+   "collapsed_sections": [],
+   "name": "A1.4 - Module One Review.ipynb",
+   "provenance": [],
+   "version": "0.3.2"
+  },
+  "kernelspec": {
+   "display_name": "Python 3 [3.6]",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}
