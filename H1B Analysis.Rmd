@@ -1,0 +1,319 @@
+---
+title: "H1B Analysis"
+author: "Team - Why Women Code; Members: Weiyi Zhao, Jessica Yan, Rebecca Liu, James Tang"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+# Packages
+```{r warning=FALSE, error=FALSE, message=FALSE}
+library(jsonlite)
+library(rvest)
+library(pbapply)
+library(data.table)
+library(urltools)
+library(ggthemes)
+library(tidyverse)
+library(openintro)
+```
+
+# Web Scraping
+
+#### Step 1: Get the urls for all the cities and years.
+
+```{r eval=FALSE, cache=FALSE}
+json_cities<-paste0('http://h1bdata.info/cities.php?term=', letters)
+all_cities<-unlist(pblapply(json_cities,fromJSON))
+city_year<-expand.grid(city=all_cities,yr=seq(2015,2018))
+city_year$city<-url_encode(as.character(city_year$city))
+all_urls<-paste0('http://h1bdata.info/index.php?em=&job=&city=', city_year[,1],'&year=', city_year[,2])
+```
+
+#### Step 2: Develop a function to get the data table in each url.
+```{r eval=FALSE, cache=FALSE}
+main<-function(url.x){
+  x<-read_html(url.x) %>% 
+    html_table(fill = TRUE)
+  x<-data.table(x[[1]])
+  return(x)
+  Sys.sleep(5)
+}
+```
+
+#### Step 3: Apply the function.
+```{r eval=FALSE, cache=FALSE}
+all_h1b<-pblapply(all.urls, main)
+all_h1b<-rbindlist(all_h1b)
+```
+
+# Dataset 1
+
+#### Import Data; Change Column Names; Filter out Outliers
+```{r warning=FALSE, error=FALSE, message=FALSE}
+rm(list = ls())
+
+h1b_1718 <- read_csv("C:/Users/Rebecca/Documents/R DA BEST/h1b_data1.csv")
+names <- c("Employer", "Job_Title", "Base_Salary", "Location", "Submit_Date", "Start_Date", "Case_Status")
+colnames(h1b_1718) <- names
+
+state_change <- setNames(rbind((state.abb),(state.abb)), rbind(toupper(state.name),toupper(state.abb)))
+h1b_1718_clean <- h1b_1718 %>% 
+  separate(Location, c("City", "State"), sep=", ") %>% 
+  mutate(State = state_change[State]) %>% 
+  filter(!is.na(State)) %>% 
+  mutate(Base_Salary=ifelse(Base_Salary>300000, NA, Base_Salary))
+```
+
+# Dataset 2
+
+#### Import Data; Change Column Names; Filter out Outliers
+```{r warning=FALSE, error=FALSE, message=FALSE}
+h1b_1216 <- read_csv("C:/Users/Rebecca/Documents/R DA BEST/h1b_data.csv")
+colnames(h1b_1216) <- names
+
+h1b_1216_clean <- h1b_1216 %>% 
+  separate(Location, c("City", "State"), sep=", ") %>% 
+  mutate(State=gsub("(HEIGHTS)", "NY", State, ignore.case = TRUE)) %>% 
+  mutate(Base_Salary=ifelse(Base_Salary>300000, NA, Base_Salary))
+
+h1b_1216_clean[which(is.na(h1b_1216_clean$State)),5] <- c("NY", "NY", "GA", "WA", "NJ", "CA", "MO", "NC")
+```
+
+# Data Merging & Cleansing
+
+#### Step 1: Ensure all variables have the appropriate data types.
+#### Step 2: Remove disturbing patterns using regular expression.
+#### Step 3: Filter out job categories that don't make sense.
+#### Step 4: Added a new column for Job Category by matching patterns in the Job Title using regular expression.
+```{r warning=FALSE, error=FALSE, message=FALSE}
+h1b <- rbind(h1b_1216_clean,h1b_1718_clean) %>% 
+  mutate(Base_Salary=as.numeric(gsub("[,]", "", Base_Salary)),
+         City=str_to_title(City),
+         Employer=str_to_title(Employer),
+         Job_Title=str_to_upper(Job_Title),
+         Case_Status=str_to_title(Case_Status),
+         Submit_Date=as.Date(Submit_Date, format="%m/%d/%Y"),
+         Start_Date=as.Date(Start_Date, format="%m/%d/%Y"),
+         Job_Title=gsub("[.]", "", Job_Title, ignore.case = TRUE),
+         Submit_Year=year(Submit_Date),
+         Submit_Month=month(Submit_Date),
+         Start_Year=year(Start_Date),
+         City=gsub("[,]", "", City)) %>% 
+  filter(!grepl("[0-9]+", Job_Title),Submit_Year >= 2015,!is.na(Job_Title)) %>% 
+  mutate(Job_Category=case_when(
+    grepl(".*ANALYST.*", Job_Title, ignore.case = TRUE) ~ "Analyst",
+    grepl(".*manager.*|.*mgr.*", Job_Title, ignore.case = TRUE) ~ "Management",
+    grepl(".*engineer.*|.*developer.*", Job_Title, ignore.case = TRUE) ~ "Engineer",
+    grepl(".*data.*scientist.*", Job_Title, ignore.case = TRUE) ~ "Data Scientist",
+    grepl(".*business.*intelli.*", Job_Title, ignore.case = TRUE) ~ "BI Analyst"))
+
+dim(h1b)
+```
+
+# Visualization 1: Base Salary Distribution
+```{r warning=FALSE, error=FALSE, message=FALSE}
+h1b %>% 
+  filter(Case_Status == 'Certified') %>% 
+  ggplot(aes(Base_Salary)) +
+  geom_density(fill='orange', color='NA', alpha=0.8) + 
+  theme_gdocs() + 
+  theme(axis.text.y=element_blank()) +
+  xlim(0,250000) +
+  labs(title="Base Salary Distribution", 
+       subtitle = "2015 - 2018", 
+       x="Base Salary ($)", 
+       y="Density") +
+  theme(plot.title = element_text(color="coral3", hjust=0.5, size = 15),
+        plot.subtitle = element_text(face="italic", color="black", hjust=0.5, size=10),
+        panel.grid.major.x = element_blank(),
+        axis.title = element_text(color="black", size=10),
+        axis.text.x = element_text(size=8))
+```
+
+### Insights
+We can see that the distribution of all the H1B holders' salaries from 2015 to 2018 fits a right skewed normal distribution. Most of the H1B holders' salaries fall in the internal between 80k and 120k, which aligns with the reality.
+
+# Visualization 2: Top 10 H1B Sponsors
+```{r warning=FALSE, error=FALSE, message=FALSE}
+empsponsor <- h1b %>%
+  group_by(Employer) %>% 
+  mutate(Count = n()) %>% 
+  arrange(desc(Count)) %>% 
+  select(Employer, Count) %>% 
+  distinct()
+
+top10sponsors <- empsponsor[1:10,]
+
+ggplot(top10sponsors, aes(x = reorder(Employer, -Count), y = Count)) + 
+  geom_col(fill="darkgray") +
+  ylim(c(0, 100000)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5, size = 7),
+        panel.grid = element_blank(),
+        panel.background = element_blank()) +
+  geom_text(aes(label=Count), vjust=-1, size = 3) +
+  labs(title = "Top 10 H1B Sponsors", subtitle = "2015 - 2018",
+       x="Employer", y="No. of H1B Filed") +
+  theme(plot.title = element_text(color="black", size=13, hjust=0.5),
+        plot.subtitle = element_text(face="italic", color="black", size=10, hjust=0.5),
+        axis.title = element_text(size=10)) +
+  geom_hline(aes(yintercept = mean(Count)), lty="dashed", color="red", size=0.7)
+```
+
+### Insights
+In this analysis, we add a column showing the number of the H1B applications filed grouped by sponsorig employers. We filtered the data to get the top 10 employers in terms of the total number of applications. We made a bar chart based on this data, which visually tells us the relative value and total number of the applications filed by the top 10 employers.
+
+# Visualization 3: US Map
+```{r warning=FALSE, error=FALSE, message=FALSE}
+state <- map_data("state") %>% 
+  mutate(State_Abbr=state2abbr(region))
+
+View(state)
+
+certified <- h1b %>% 
+  mutate(Certified=ifelse(Case_Status=="Certified", 1, 0)) %>% 
+  group_by(State) %>% 
+  mutate(Total_Case=n(),
+         Total_Certified=sum(Certified),
+         Certified_Rate=Total_Certified/Total_Case) %>% 
+  select(State, Certified_Rate) %>% 
+  arrange(desc(Certified_Rate)) %>% 
+  distinct() %>% 
+  left_join(state, by=c("State"="State_Abbr")) %>% 
+  filter(!is.na(long))
+
+ggplot() +
+  geom_polygon(data=state, aes(x=long, y=lat, group=group), color="black", fill="floralwhite") +
+  coord_fixed(1.3) +
+  geom_polygon(data=certified, aes(x=long, y=lat, group=group, fill=Certified_Rate), color="black") +
+  labs(title="Nationwide Certified Rate", subtitle="2015 - 2018", fill="Certified Rate") +
+  annotate("text", x=-120, y=37.5, label="CA", color="red", size=3) +
+  annotate("text", x=-100, y=32.5, label="TX", color="red", size=3) +
+  annotate("text", x=-107.5, y=43, label="WY", color="floralwhite", size=3) +
+  theme(panel.background = element_blank(),
+        axis.line = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(face="bold", hjust=0.5),
+        plot.subtitle = element_text(face="italic", hjust=0.5),
+        legend.title = element_text(size=10),
+        legend.text = element_text(size=8))
+```
+
+### Insights
+In this analysis, we first calculated the certified rate for each state, and then we plotted the distribution of certified rate by state over an US map. The gradience of the color tells us that Wyoming has the lowest certified rate among all states. On the other hand, California and Texas have the most H1B cases filed. Not surprisingly, their certified rates are also among the highest of all states.
+
+# Visualization 4: BoxPlot
+```{r warning=FALSE, error=FALSE, message=FALSE}
+anova <- aov(h1b$Base_Salary ~ h1b$Case_Status)
+summary(anova)
+TukeyHSD(anova)
+
+ggplot(h1b) +
+  geom_boxplot(aes(factor(Case_Status), Base_Salary, fill=as.factor(Case_Status))) +
+  ylim(c(0, 100000)) + 
+  theme_gdocs() + 
+  scale_fill_gdocs() + 
+  theme(axis.text.x=element_blank()) +
+  labs(title="Base Salary by Case Status", subtitle="2015 - 2018",
+       x="Case Status", y="Base Salary ($)", fill="Case Status") +
+  theme(plot.title = element_text(face="bold", color="firebrick", size=13, hjust=0.5),
+        plot.subtitle = element_text(face="italic", size=10, color="black", hjust=0.5),
+        panel.grid.major.x = element_blank(),
+        legend.title = element_text(color="black", size=10),
+        legend.text = element_text(size=8),
+        axis.title = element_text(size=10, color="black"),
+        axis.text = element_text(size=8))
+```
+
+### Insights
+We wanted to check the salary differences in different H1B Status groups. First of all, we check the statistical results from the ANOVA test. Based on the results, we can see that the p-value is quite small, which means that there is significant difference among the means of all three groups. Then, we utilize the TukeyHSD test and find out that each pair of two random groups has signicant difference from each other.
+
+To better visualize the comparison, we made the boxplot to show the distribution within each H1B Status group. It turns out that the one who got denied would tend to have lower salary while the certified and withdrawn groups have a 70k median salaries.
+
+# Visualization 5: Monthly Trend
+```{r}
+case.month <-
+  h1b %>% 
+  filter(Case_Status == 'Certified')
+case.month = tapply(case.month$Case_Status, list(case.month$Submit_Month,case.month$Submit_Year), length)
+case.month<-melt(case.month)
+ggplot(case.month) + 
+  geom_line(aes(Var1,value,group=as.factor(Var2),color=as.factor(Var2))) + 
+  theme_gdocs() + 
+  scale_color_gdocs() + 
+  theme(axis.title.x=element_blank()) +
+  scale_x_continuous(breaks=seq(1,12)) + 
+  labs(title="Monthly H1B Filing Trend", subtitle="2015 - 2018", color="Year") +
+  theme(panel.grid.major.y = element_line(size=0.5),
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(face="bold", size=13, color="black", hjust=0.5),
+        plot.subtitle = element_text(face="italic", size=10, color="black", hjust=0.5),
+        legend.title = element_text(face="bold", size=10, color="black"),
+        legend.text = element_text(size=8, color="black"),
+        axis.title = element_blank(),
+        axis.text = element_text(size=8, color="black"))
+```
+
+### Insights
+We can see that most of the H1B applications that are certified are submitted in March and monthly trends are quite consistent in each year from 2015 to 2018.  Therefore, we can adjust our own timelines based on the general situation.
+
+# Visualization 6: Time Series Analysis
+```{r warning=FALSE, error=FALSE, message=FALSE}
+certified_1 <- h1b %>% 
+  mutate(Certified=ifelse(Case_Status=="Certified", 1, 0)) %>% 
+  group_by(Submit_Year, Job_Category) %>% 
+  summarize(Total_Case=n(),
+            Total_Certified=sum(Certified),
+            Certified_Rate=Total_Certified/Total_Case,
+            Avg_Salary=mean(Base_Salary, na.rm = TRUE)) %>% 
+  filter(!is.na(Job_Category))
+
+ggplot() +
+  geom_smooth(data=certified_1, aes(x=Submit_Year, y=Certified_Rate, color=Job_Category),
+              alpha=0.5, se=FALSE) +
+  labs(title="Certified Rate by Job Category over Time",
+       subtitle="2015 - 2018",
+       color="Job Category",
+       x="Submit Year",
+       y="Certified Rate") +
+  theme(panel.background = element_blank(),
+        axis.line = element_line(color="gray"),
+        legend.key = element_blank(),
+        plot.title = element_text(face="bold", size=13, color="coral3", hjust=0.5),
+        plot.subtitle = element_text(face="italic", size=10, color="black", hjust=0.5),
+        legend.title = element_text(color="black", size=10),
+        legend.text = element_text(color="black", size=8),
+        axis.title = element_text(color="black", size=10),
+        axis.text = element_text(color="black", size=8))
+
+ggplot()+
+  geom_smooth(data=certified_1, aes(x=Submit_Year, y=Avg_Salary, color=Job_Category),
+              alpha=0.5, se=FALSE) +
+  labs(title="Base Salary by Job Category over Time",
+       subtitle="2015 - 2018",
+       color="Job Category",
+       x="Submit Year",
+       y="Base Salary") +
+  theme(panel.background = element_blank(),
+        axis.line = element_line(color="gray"),
+        legend.key = element_blank(),
+        plot.title = element_text(face="bold", size=13, color="coral3", hjust=0.5),
+        plot.subtitle = element_text(face="italic", size=10, color="black", hjust=0.5),
+        legend.title = element_text(color="black", size=10),
+        legend.text = element_text(color="black", size=8),
+        axis.title = element_text(color="black", size=10),
+        axis.text = element_text(color="black", size=8))
+```
+
+### Insights
+The first graph displays the trends of cerified rates for different job categories over time. Overall, the rate of each job category is increasing. We can also tell that certified rate for analysts is most stable over time, while we see great potential of data scientists. 
+
+The second graph displays the trends of base salary for different job categories over time. Overall, the salary of each job category is increasing. Analysts gain the lowest base salary, While data scientists and managers gain the highest salary.
+
+# General Recommendations for International Job Seekers
+
+#### 1. Choose companies that are generous with sponsoring international hires, such as Infosys, Deloitte, EY, Tata Cosultancy. Industry wise, we recommend looking into Technology and Consulting industries.
+#### 2. For positions, we see great potential in Data Scientists and Business Intelligence Analysts/Engineers. In the meantime, Analysts are still very popular for job seekers. From a salary perspective, Data Scientists have the highest earnings. Analysts and Engineers have a clear trend of increasing salaries.
